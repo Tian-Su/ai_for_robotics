@@ -244,7 +244,8 @@ def demo_grading(hunter_bot, target_bot, next_move_fcn, OTHER=None):
     to the target_bot. This function is here to help you understand how we
     will grade your submission."""
     max_distance = 1.94 * target_bot.distance  # 1.94 is an example. It will change.
-    separation_tolerance = 0.02 * target_bot.distance  # hunter must be within 0.02 step size to catch target
+    separation_tolerance = 0.02 * target_bot.distance  # hunter must be
+    # within 0.02 step size to catch target
     caught = False
     ctr = 0
 
