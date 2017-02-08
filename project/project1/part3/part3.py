@@ -88,7 +88,7 @@ def estimate_next_pos(measurement, OTHER=None):
     # in this order for grading purposes.
     if not OTHER:
         OTHER = {'msmt': [measurement], 'length': None, 'angle': None,
-                 'counter':1}
+                 'counter': 1}
         xy_estimate = OTHER['msmt'][-1]
     elif len(OTHER['msmt']) == 1:
         OTHER['msmt'].append(measurement)
@@ -99,16 +99,16 @@ def estimate_next_pos(measurement, OTHER=None):
         OTHER['msmt'].append(measurement)
         OTHER['counter'] += 1
         # update length
-        # learning rate 0.1
-        r = 0.01
+        # average based on counter
         new_length = distance_between(OTHER['msmt'][-2], OTHER['msmt'][-1])
-        OTHER['length'] = (1 - r) * OTHER['length'] + r * new_length
+        OTHER['length'] = ((OTHER['counter'] - 1) * OTHER[
+            'length'] + new_length) / OTHER['counter']
         # calculate angle
         v1 = cal_vector(OTHER['msmt'][-3], OTHER['msmt'][-2])
         v2 = cal_vector(OTHER['msmt'][-2], OTHER['msmt'][-1])
         angle = angle_between(v1, v2)
         if OTHER['angle']:
-            OTHER['angle'] = (1 - r) * OTHER['angle'] + r * angle
+            OTHER['angle'] = ((OTHER['counter'] - 1) * OTHER['angle'] + angle) / OTHER['counter']
         else:
             OTHER['angle'] = angle
         # v3 = np.dot(np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]), np.array(v2))
@@ -332,6 +332,3 @@ def naive_next_move(hunter_position, hunter_heading, target_measurement,
 # hunter = robot(-10.0, -10.0, 0.0)
 #
 # print demo_grading(hunter, target, next_move)
-
-
-
