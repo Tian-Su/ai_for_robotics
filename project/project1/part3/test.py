@@ -16,7 +16,7 @@ def curr_time_millis():
 failed_ctr = 0
 steps_list = []
 time_step = []
-N = 100
+N = 1000
 graph = False
 for trial in range(N):
     xt = random.uniform(-20,20)
@@ -27,6 +27,7 @@ for trial in range(N):
     test = random.uniform(-1,1)
     if test < 0:
         turn *= -1
+    print turn
     orih = random.uniform(-pi,pi)
     orit = random.uniform(-pi,pi)
     dist = random.uniform(1.,5.)

@@ -32,7 +32,8 @@
 #
 # As an added challenge, try to get to the target bot as quickly as
 # possible.
-
+import sys
+sys.path.append('/Users/tiansu/Documents/git/ai_for_robotics/project/project1/part3')
 from robot import *
 from matrix import *
 import numpy as np
@@ -61,6 +62,7 @@ def angle_between(v1, v2):
     """
     v1_u = unit_vector(v1)
     v2_u = unit_vector(v2)
+
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
 
@@ -79,6 +81,8 @@ def cal_vector(point1, point2):
     """
     return ((point2[0] - point1[0]), (point2[1] - point1[1]))
 
+def determinant(v,w):
+   return v[0]*w[1]-v[1]*w[0]
 
 def estimate_next_pos(measurement, OTHER=None):
     """Estimate the next (x, y) position of the wandering Traxbot
@@ -107,6 +111,8 @@ def estimate_next_pos(measurement, OTHER=None):
         v1 = cal_vector(OTHER['msmt'][-3], OTHER['msmt'][-2])
         v2 = cal_vector(OTHER['msmt'][-2], OTHER['msmt'][-1])
         angle = angle_between(v1, v2)
+        if determinant(v1,v2) < 0:
+            angle = -angle
         if OTHER['angle']:
             OTHER['angle'] = ((OTHER['counter'] - 1) * OTHER['angle'] + angle) / OTHER['counter']
         else:
@@ -250,7 +256,7 @@ def demo_grading(hunter_bot, target_bot, next_move_fcn, OTHER=None):
     ctr = 0
 
     # We will use your next_move_fcn until we catch the target or time expires.
-    while not caught and ctr < 1000:
+    while not caught and ctr < 1000: #ctr < 1000:
 
         # Check to see if the hunter has caught the target.
         hunter_position = (hunter_bot.x, hunter_bot.y)
@@ -326,7 +332,7 @@ def naive_next_move(hunter_position, hunter_heading, target_measurement,
     distance = max_distance  # full speed ahead!
     return turning, distance, OTHER
 
-# target = robot(0.0, 10.0, 0.0, 2*pi / 30, 1.5)
+# target = robot(0.0, 10.0, 0.0, 2*pi / -30, 1.5)
 # measurement_noise = .05*target.distance
 # target.set_noise(0.0, 0.0, measurement_noise)
 #
