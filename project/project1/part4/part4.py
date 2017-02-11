@@ -121,7 +121,7 @@ def cal_angle_distance(hunter_position, a, hunter_heading):
     distance = distance_between(hunter_position, a)
     return turning, distance
 
-def next_move_fcn(hunter_position, hunter_heading, target_measurement, max_distance,
+def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
               OTHER=None):
     # This function will be called after each time the target moves.
 
@@ -191,7 +191,7 @@ def demo_grading(hunter_bot, target_bot, next_move_fcn, OTHER=None):
         ctr += 1
         if ctr >= 1000:
             print "It took too many steps to catch the target."
-    return caught
+    return caught, ctr
 
 
 def angle_trunc(a):
@@ -286,7 +286,7 @@ def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER = None):
         ctr += 1
         if ctr >= 1000:
             print "It took too many steps to catch the target."
-    return caught
+    return caught, ctr
 
 def naive_next_move(hunter_position, hunter_heading, target_measurement,
                     max_distance, OTHER):
@@ -318,7 +318,7 @@ target.set_noise(0.0, 0.0, measurement_noise)
 
 hunter = robot(-10.0, -10.0, 0.0)
 
-print demo_grading(hunter, target, naive_next_move)
+print demo_grading(hunter, target, next_move)
 
 
 
