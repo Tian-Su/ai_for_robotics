@@ -109,6 +109,8 @@ def cal_vector(point1, point2):
     """
     return ((point2[0] - point1[0]), (point2[1] - point1[1]))
 
+def determinant(v,w):
+   return v[0]*w[1]-v[1]*w[0]
 
 def estimate_next_pos(measurement, OTHER=None):
     """Estimate the next (x, y) position of the wandering Traxbot
@@ -117,25 +119,30 @@ def estimate_next_pos(measurement, OTHER=None):
     # You must return xy_estimate (x, y), and OTHER (even if it is None)
     # in this order for grading purposes.
     if not OTHER:
-        OTHER = {'msmt': [measurement], 'length': None, 'angle': None}
+        OTHER = {'msmt': [measurement], 'length': None, 'angle': None,
+                 'counter': 1}
         xy_estimate = OTHER['msmt'][-1]
     elif len(OTHER['msmt']) == 1:
         OTHER['msmt'].append(measurement)
         OTHER['length'] = distance_between(OTHER['msmt'][-2], OTHER['msmt'][-1])
+        OTHER['counter'] += 1
         xy_estimate = OTHER['msmt'][-1]
     else:
         OTHER['msmt'].append(measurement)
+        OTHER['counter'] += 1
         # update length
-        # learning rate 0.1
-        r = 0.1
+        # average based on counter
         new_length = distance_between(OTHER['msmt'][-2], OTHER['msmt'][-1])
-        OTHER['length'] = (1 - r) * OTHER['length'] + r * new_length
+        OTHER['length'] = ((OTHER['counter'] - 1) * OTHER[
+            'length'] + new_length) / OTHER['counter']
         # calculate angle
         v1 = cal_vector(OTHER['msmt'][-3], OTHER['msmt'][-2])
         v2 = cal_vector(OTHER['msmt'][-2], OTHER['msmt'][-1])
         angle = angle_between(v1, v2)
+        if determinant(v1,v2) < 0:
+            angle = -angle
         if OTHER['angle']:
-            OTHER['angle'] = (1 - r) * OTHER['angle'] + r * angle
+            OTHER['angle'] = ((OTHER['counter'] - 1) * OTHER['angle'] + angle) / OTHER['counter']
         else:
             OTHER['angle'] = angle
         # v3 = np.dot(np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]), np.array(v2))

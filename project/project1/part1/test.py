@@ -8,12 +8,17 @@ from robot import *
 # How the robot class behaves.
 failed_ctr = 0
 steps_list = []
-for trial in range(100):
-    x = random.random()*20
-    y = random.random()*20
+n = 1000
+for trial in range(n):
+    x = random.uniform(-20, 20)
+    y = random.uniform(-20, 20)
+    turn = random.uniform((10 * pi) / 180, (50 * pi) / 180)
+    test = random.uniform(-1, 1)
+    if test < 0:
+        turn *= -1
+    dist = random.uniform(1., 5.)
     ori = random.random()
-    turn = random.random()*pi
-    dist = random.random()*2.0
+
     test_target = robot(x, y, ori, turn, dist)
     #test_target = robot(0., 0., 0., 2*pi / 30.0, 2.5)
     measurement_noise = 0.00 * test_target.distance
@@ -24,7 +29,7 @@ for trial in range(100):
     else:
         steps_list.append(ctr)
 
-print "Failed attempts ==> ", failed_ctr, "out of 100 trials"
+print "Failed attempts ==> ", failed_ctr, "out of {0} trials".format(n)
 print "Average steps taken ", np.mean(steps_list)
 print "Mininum steps taken ", np.min(steps_list)
 print "Maximum steps taken ", np.max(steps_list)

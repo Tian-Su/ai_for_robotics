@@ -78,6 +78,8 @@ def cal_vector(point1, point2):
     """
     return ((point2[0] - point1[0]), (point2[1] - point1[1]))
 
+def determinant(v,w):
+   return v[0]*w[1]-v[1]*w[0]
 
 def estimate_next_pos(measurement, OTHER=None):
     """Estimate the next (x, y) position of the wandering Traxbot
@@ -106,6 +108,8 @@ def estimate_next_pos(measurement, OTHER=None):
         v1 = cal_vector(OTHER['msmt'][-3], OTHER['msmt'][-2])
         v2 = cal_vector(OTHER['msmt'][-2], OTHER['msmt'][-1])
         angle = angle_between(v1, v2)
+        if determinant(v1,v2) < 0:
+            angle = -angle
         if OTHER['angle']:
             OTHER['angle'] = ((OTHER['counter'] - 1) * OTHER['angle'] + angle) / OTHER['counter']
         else:
@@ -118,9 +122,6 @@ def estimate_next_pos(measurement, OTHER=None):
         test_target.set_noise(0.0, 0.0, 0.0)
         test_target.move(OTHER['angle'], OTHER['length'])
         xy_estimate = (test_target.x, test_target.y)
-        # xy_estimate = [(test_target.x, test_target.y)]
-        # test_target.move(OTHER['angle'], OTHER['length'])
-        # xy_estimate.append((test_target.x, test_target.y))
     return xy_estimate, OTHER
 
 
