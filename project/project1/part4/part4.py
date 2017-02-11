@@ -15,9 +15,7 @@
 #
 # Same as part 3. Again, try to catch the target in as few steps as possible.
 import sys
-
-sys.path.append(
-    '/Users/tiansu/Documents/git/ai_for_robotics/project/project1/part4')
+sys.path.append('/Users/tiansu/Documents/git/ai_for_robotics/project/project1/part4')
 from robot import *
 from matrix import *
 import numpy as np
@@ -65,10 +63,8 @@ def cal_vector(point1, point2):
     """
     return ((point2[0] - point1[0]), (point2[1] - point1[1]))
 
-
-def determinant(v, w):
-    return v[0] * w[1] - v[1] * w[0]
-
+def determinant(v,w):
+   return v[0]*w[1]-v[1]*w[0]
 
 def estimate_next_pos(measurement, OTHER=None):
     """Estimate the next (x, y) position of the wandering Traxbot
@@ -97,11 +93,10 @@ def estimate_next_pos(measurement, OTHER=None):
         v1 = cal_vector(OTHER['msmt'][-3], OTHER['msmt'][-2])
         v2 = cal_vector(OTHER['msmt'][-2], OTHER['msmt'][-1])
         angle = angle_between(v1, v2)
-        if determinant(v1, v2) < 0:
+        if determinant(v1,v2) < 0:
             angle = -angle
         if OTHER['angle']:
-            OTHER['angle'] = ((OTHER['counter'] - 1) * OTHER['angle'] + angle) / \
-                             OTHER['counter']
+            OTHER['angle'] = ((OTHER['counter'] - 1) * OTHER['angle'] + angle) / OTHER['counter']
         else:
             OTHER['angle'] = angle
         # v3 = np.dot(np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]), np.array(v2))
@@ -119,7 +114,6 @@ def estimate_next_pos(measurement, OTHER=None):
         xy_estimate.append((test_target.x, test_target.y))
     return xy_estimate, OTHER
 
-
 def cal_angle_distance(hunter_position, a, hunter_heading):
     v = cal_vector(hunter_position, a)
     angle = atan2(v[1], v[0])
@@ -127,9 +121,7 @@ def cal_angle_distance(hunter_position, a, hunter_heading):
     distance = distance_between(hunter_position, a)
     return turning, distance
 
-
-def next_move(hunter_position, hunter_heading, target_measurement,
-              max_distance,
+def next_move(hunter_position, hunter_heading, target_measurement, max_distance,
               OTHER=None):
     # This function will be called after each time the target moves.
 
@@ -141,32 +133,13 @@ def next_move(hunter_position, hunter_heading, target_measurement,
         a = xy_estimate
     else:
         a = xy_estimate[0]
-
-    rog_turning, rog_distance = cal_angle_distance(hunter_position, a,
-                                                   hunter_heading)
-
-    if OTHER['counter'] >= 2:
-        station = (np.array(OTHER['msmt'][0]) + np.array(OTHER['msmt'][1])) / 2
-        print 'first'
-        print np.array(OTHER['msmt'][0])
-        print 'second'
-        print np.array(OTHER['msmt'][1])
-        print 'station'
-        print station
-        station_turning, station_distance = cal_angle_distance(hunter_position,
-                                                               station,
-                                                               hunter_heading)
-        if station_distance < (OTHER['length'] / 2):
-            if rog_distance < OTHER['length']:
-                turning, distance = rog_turning, rog_distance
-            else:
-                turning, distance = 0, 0
-        else:
-            turning, distance = station_turning, station_distance
-    else:
-        turning, distance = rog_turning, rog_distance
+    turning, distance = cal_angle_distance(hunter_position, a, hunter_heading)
+    if (distance > max_distance) and (OTHER['counter'] >= 3):
+        a = xy_estimate[2]
+        turning, distance = cal_angle_distance(hunter_position, a, hunter_heading)
 
     return turning, distance, OTHER
+
 
 
 def distance_between(point1, point2):
@@ -218,7 +191,7 @@ def demo_grading(hunter_bot, target_bot, next_move_fcn, OTHER=None):
         ctr += 1
         if ctr >= 1000:
             print "It took too many steps to catch the target."
-    return caught
+    return caught, ctr
 
 
 def angle_trunc(a):
@@ -236,16 +209,15 @@ def get_heading(hunter_position, target_position):
     heading = angle_trunc(heading)
     return heading
 
-
-def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER=None):
+def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER = None):
     """Returns True if your next_move_fcn successfully guides the hunter_bot
     to the target_bot. This function is here to help you understand how we
     will grade your submission."""
-    max_distance = 0.98 * target_bot.distance  # 0.98 is an example. It will change.
-    separation_tolerance = 0.02 * target_bot.distance  # hunter must be within 0.02 step size to catch target
+    max_distance = 0.98 * target_bot.distance # 0.98 is an example. It will change.
+    separation_tolerance = 0.02 * target_bot.distance # hunter must be within 0.02 step size to catch target
     caught = False
     ctr = 0
-    # For Visualization
+    #For Visualization
     import turtle
     window = turtle.Screen()
     window.bgcolor('white')
@@ -259,16 +231,14 @@ def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER=None):
     broken_robot.color('green')
     broken_robot.resizemode('user')
     broken_robot.shapesize(0.3, 0.3, 0.3)
-    size_multiplier = 15.0  # change size of animation
+    size_multiplier = 15.0 #change size of animation
     chaser_robot.hideturtle()
     chaser_robot.penup()
-    chaser_robot.goto(hunter_bot.x * size_multiplier,
-                      hunter_bot.y * size_multiplier - 100)
+    chaser_robot.goto(hunter_bot.x*size_multiplier, hunter_bot.y*size_multiplier-100)
     chaser_robot.showturtle()
     broken_robot.hideturtle()
     broken_robot.penup()
-    broken_robot.goto(target_bot.x * size_multiplier,
-                      target_bot.y * size_multiplier - 100)
+    broken_robot.goto(target_bot.x*size_multiplier, target_bot.y*size_multiplier-100)
     broken_robot.showturtle()
     measuredbroken_robot = turtle.Turtle()
     measuredbroken_robot.shape('circle')
@@ -278,7 +248,7 @@ def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER=None):
     measuredbroken_robot.shapesize(0.1, 0.1, 0.1)
     broken_robot.pendown()
     chaser_robot.pendown()
-    # End of Visualization
+    #End of Visualization
     # We will use your next_move_fcn until we catch the target or time expires.
     while not caught and ctr < 1000:
         # Check to see if the hunter has caught the target.
@@ -293,10 +263,7 @@ def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER=None):
         target_measurement = target_bot.sense()
 
         # This is where YOUR function will be called.
-        turning, distance, OTHER = next_move_fcn(hunter_position,
-                                                 hunter_bot.heading,
-                                                 target_measurement,
-                                                 max_distance, OTHER)
+        turning, distance, OTHER = next_move_fcn(hunter_position, hunter_bot.heading, target_measurement, max_distance, OTHER)
 
         # Don't try to move faster than allowed!
         if distance > max_distance:
@@ -307,23 +274,19 @@ def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER=None):
 
         # The target continues its (nearly) circular motion.
         target_bot.move_in_circle()
-        # Visualize it
-        measuredbroken_robot.setheading(target_bot.heading * 180 / pi)
-        measuredbroken_robot.goto(target_measurement[0] * size_multiplier,
-                                  target_measurement[1] * size_multiplier - 100)
+        #Visualize it
+        measuredbroken_robot.setheading(target_bot.heading*180/pi)
+        measuredbroken_robot.goto(target_measurement[0]*size_multiplier, target_measurement[1]*size_multiplier-100)
         measuredbroken_robot.stamp()
-        broken_robot.setheading(target_bot.heading * 180 / pi)
-        broken_robot.goto(target_bot.x * size_multiplier,
-                          target_bot.y * size_multiplier - 100)
-        chaser_robot.setheading(hunter_bot.heading * 180 / pi)
-        chaser_robot.goto(hunter_bot.x * size_multiplier,
-                          hunter_bot.y * size_multiplier - 100)
-        # End of visualization
+        broken_robot.setheading(target_bot.heading*180/pi)
+        broken_robot.goto(target_bot.x*size_multiplier, target_bot.y*size_multiplier-100)
+        chaser_robot.setheading(hunter_bot.heading*180/pi)
+        chaser_robot.goto(hunter_bot.x*size_multiplier, hunter_bot.y*size_multiplier-100)
+        #End of visualization
         ctr += 1
         if ctr >= 1000:
             print "It took too many steps to catch the target."
-    return caught
-
+    return caught, ctr
 
 def naive_next_move(hunter_position, hunter_heading, target_measurement,
                     max_distance, OTHER):
@@ -349,11 +312,15 @@ def naive_next_move(hunter_position, hunter_heading, target_measurement,
     distance = max_distance  # full speed ahead!
     return turning, distance, OTHER
 
-
-target = robot(0.0, 10.0, 0.0, 2 * pi / 30, 1.5)
-measurement_noise = .05 * target.distance
+target = robot(0.0, 10.0, 0.0, 2*pi / 30, 1.5)
+measurement_noise = .05*target.distance
 target.set_noise(0.0, 0.0, measurement_noise)
 
 hunter = robot(-10.0, -10.0, 0.0)
 
 print demo_grading(hunter, target, next_move)
+
+
+
+
+
