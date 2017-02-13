@@ -1,7 +1,7 @@
 #from project import project1 as p1
 import sys
 sys.path.append('/Users/TianSu/Dropbox/Study/GT/ai_for_robotics/project/project1/part2')
-import part2 as p
+import studentMain2 as p
 #reload(p1)
 import numpy as np
 import random

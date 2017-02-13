@@ -3,7 +3,7 @@
 import sys
 
 sys.path.append('/Users/TianSu/Dropbox/Study/GT/ai_for_robotics/project/project1/part3')
-import part3 as p
+import studentMain3 as p
 import random
 from robot import *
 

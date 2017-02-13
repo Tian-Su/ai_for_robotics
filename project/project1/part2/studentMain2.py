@@ -1,48 +1,19 @@
 # ----------
-# Background
+# Part Two
 #
-# A robotics company named Trax has created a line of small self-driving robots
-# designed to autonomously traverse desert environments in search of undiscovered
-# water deposits.
-#
-# A Traxbot looks like a small tank. Each one is about half a meter long and drives
-# on two continuous metal tracks. In order to maneuver itself, a Traxbot can do one
-# of two things: it can drive in a straight line or it can turn. So to make a
-# right turn, A Traxbot will drive forward, stop, turn 90 degrees, then continue
-# driving straight.
-#
-# This series of questions involves the recovery of a rogue Traxbot. This bot has
-# gotten lost somewhere in the desert and is now stuck driving in an almost-circle: it has
-# been repeatedly driving forward by some step size, stopping, turning a certain
-# amount, and repeating this process... Luckily, the Traxbot is still sending all
-# of its sensor data back to headquarters.
-#
-# In this project, we will start with a simple version of this problem and
-# gradually add complexity. By the end, you will have a fully articulated
-# plan for recovering the lost Traxbot.
-#
-# ----------
-# Part One
-#
-# Let's start by thinking about circular motion (well, really it's polygon motion
-# that is close to circular motion). Assume that Traxbot lives on
-# an (x, y) coordinate plane and (for now) is sending you PERFECTLY ACCURATE sensor
-# measurements.
-#
-# With a few measurements you should be able to figure out the step size and the
-# turning angle that Traxbot is moving with.
-# With these two pieces of information, you should be able to
-# write a function that can predict Traxbot's next location.
-#
-# You can use the robot class that is already written to make your life easier.
-# You should re-familiarize yourself with this class, since some of the details
-# have changed.
+# Now we'll make the scenario a bit more realistic. Now Traxbot's
+# sensor measurements are a bit noisy (though its motions are still
+# completetly noise-free and it still moves in an almost-circle).
+# You'll have to write a function that takes as input the next
+# noisy (x, y) sensor measurement and outputs the best guess
+# for the robot's next position.
 #
 # ----------
 # YOUR JOB
 #
-# Complete the estimate_next_pos function. You will probably want to use
-# the OTHER variable to keep track of information about the runaway robot.
+# Complete the function estimate_next_pos. You will be considered
+# correct if your estimate is within 0.01 stepsizes of Traxbot's next
+# true position.
 #
 # ----------
 # GRADING
@@ -55,20 +26,18 @@
 
 # These import steps give you access to libraries which you may (or may
 # not) want to use.
-
 from robot import *
 from matrix import *
 import numpy as np
 import math
 
 
-# This is the function you have to write. The argument 'measurement' is a
+# This is the function you have to write. Note that measurement is a
 # single (x, y) point. This function will have to be called multiple
 # times before you have enough information to accurately predict the
 # next position. The OTHER variable that your function returns will be
 # passed back to your function the next time it is called. You can use
 # this to keep track of important information over time.
-
 def unit_vector(vector):
     """ Returns the unit vector of the vector.  """
     return vector / np.linalg.norm(vector)
@@ -174,7 +143,7 @@ def demo_grading(estimate_next_pos_fcn, target_bot, OTHER=None):
     # if you haven't localized the target bot, make a guess about the next
     # position, then we move the bot and compare your guess to the true
     # next position. When you are close enough, we stop checking.
-    while not localized and ctr <= 10:
+    while not localized and ctr <= 1000:
         ctr += 1
         measurement = target_bot.sense()
         position_guess, OTHER = estimate_next_pos_fcn(measurement, OTHER)
@@ -184,65 +153,8 @@ def demo_grading(estimate_next_pos_fcn, target_bot, OTHER=None):
         if error <= distance_tolerance:
             print "You got it right! It took you ", ctr, " steps to localize."
             localized = True
-        if ctr == 10:
+        if ctr == 1000:
             print "Sorry, it took you too many steps to localize the target."
-    return localized, ctr
-
-
-def demo_grading_graph(estimate_next_pos_fcn, target_bot, OTHER=None):
-    localized = False
-    distance_tolerance = 0.01 * target_bot.distance
-    ctr = 0
-    # if you haven't localized the target bot, make a guess about the next
-    # position, then we move the bot and compare your guess to the true
-    # next position. When you are close enough, we stop checking.
-    # For Visualization
-    import turtle  # You need to run this locally to use the turtle module
-    window = turtle.Screen()
-    window.bgcolor('white')
-    size_multiplier = 25.0  # change Size of animation
-    broken_robot = turtle.Turtle()
-    broken_robot.shape('turtle')
-    broken_robot.color('green')
-    broken_robot.resizemode('user')
-    broken_robot.shapesize(0.1, 0.1, 0.1)
-    measured_broken_robot = turtle.Turtle()
-    measured_broken_robot.shape('circle')
-    measured_broken_robot.color('red')
-    measured_broken_robot.resizemode('user')
-    measured_broken_robot.shapesize(0.1, 0.1, 0.1)
-    prediction = turtle.Turtle()
-    prediction.shape('arrow')
-    prediction.color('blue')
-    prediction.resizemode('user')
-    prediction.shapesize(0.1, 0.1, 0.1)
-    prediction.penup()
-    broken_robot.penup()
-    measured_broken_robot.penup()
-    # End of Visualization
-    while not localized and ctr <= 10:
-        ctr += 1
-        measurement = target_bot.sense()
-        position_guess, OTHER = estimate_next_pos_fcn(measurement, OTHER)
-        target_bot.move_in_circle()
-        true_position = (target_bot.x, target_bot.y)
-        error = distance_between(position_guess, true_position)
-        if error <= distance_tolerance:
-            print "You got it right! It took you ", ctr, " steps to localize."
-            localized = True
-        if ctr == 10:
-            print "Sorry, it took you too many steps to localize the target."
-        # More Visualization
-        measured_broken_robot.setheading(target_bot.heading * 180 / pi)
-        measured_broken_robot.goto(measurement[0] * size_multiplier, measurement[1] * size_multiplier - 200)
-        measured_broken_robot.stamp()
-        broken_robot.setheading(target_bot.heading * 180 / pi)
-        broken_robot.goto(target_bot.x * size_multiplier, target_bot.y * size_multiplier - 200)
-        broken_robot.stamp()
-        prediction.setheading(target_bot.heading * 180 / pi)
-        prediction.goto(position_guess[0] * size_multiplier, position_guess[1] * size_multiplier - 200)
-        prediction.stamp()
-        # End of Visualization
     return localized, ctr
 
 
@@ -258,8 +170,9 @@ def naive_next_pos(measurement, OTHER=None):
 
 
 # This is how we create a target bot. Check the robot.py file to understand
-# How the robot class behaves.
-test_target = robot(2.1, 4.3, 0.5, 2 * pi / 34.0, 1.5)
-test_target.set_noise(0.0, 0.0, 0.0)
+# # How the robot class behaves.
+# test_target = robot(2.1, 4.3, 0.5, 2 * pi / 34.0, 1.5)
+# measurement_noise = 0.05 * test_target.distance
+# test_target.set_noise(0.0, 0.0, measurement_noise)
 
-demo_grading(estimate_next_pos, test_target)
+# demo_grading(naive_next_pos, test_target)

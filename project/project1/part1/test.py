@@ -1,5 +1,5 @@
 #from project import project1 as p1
-import part1 as p1
+import studentMain1 as p1
 #reload(p1)
 import numpy as np
 import random

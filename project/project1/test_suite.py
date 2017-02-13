@@ -13,10 +13,10 @@ from multiprocessing import TimeoutError
 
 import unittest
 import timeit
-from part1 import part1 as studentMain1
-from part2 import part2 as studentMain2
-from part3 import part3 as studentMain3
-from part4 import part4 as studentMain4
+from part1 import studentMain1 as studentMain1
+from part2 import studentMain2 as studentMain2
+from part3 import studentMain3 as studentMain3
+from part4 import studentMain4 as studentMain4
 from part5 import part5 as studentMain5
 
 PI = math.pi
