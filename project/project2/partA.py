@@ -129,7 +129,7 @@ class DeliveryPlanner:
         for ir, row in enumerate(self.warehouse_uptodate):
             for it, item in enumerate(row):
                 if item == '@':
-                    self.start_location = [ir, it]
+                    self.delivery_location = [ir, it]
 
         self.goal_box = None
         self.current_grid = None
@@ -146,11 +146,12 @@ class DeliveryPlanner:
                       [1, 1]  # down right
                       ]
 
-        self.delta_name = ['^', '<', 'v', '>', '<^', '>^', '<v', '>v']
+        self.delta_name = ['^', '<', 'v', '>', '<^', '>^', '<v', '>v', '*']
         self.output_path = []
 
     def plan_delivery(self):
-        current_location = self.start_location
+        current_location = self.delivery_location
+        with_box = False
         for box in self.todo:
             print box
             # reformat the map
@@ -164,7 +165,7 @@ class DeliveryPlanner:
                         temp_row.append(1)
                     elif item == '@':
                         temp_row.append(0)
-                        self.start_location = [ir, it]
+                        self.delivery_location = [ir, it]
                     elif item == box:
                         temp_row.append(0)
                         self.goal_box = [ir, it]
@@ -190,14 +191,16 @@ class DeliveryPlanner:
                 delta=self.delta,
                 delta_name=self.delta_name,
                 box_number=box,
-                with_box=False
+                with_box=with_box,
+                deliver_location=self.delivery_location,
+                purpose='lift'
             )
 
             self.output_path += path
 
             # find the policy from the current location back to the start
             policy = optimum_policy(grid=self.current_grid,
-                                    goal=self.start_location,
+                                    goal=self.delivery_location,
                                     cost=self.cost,
                                     delta=self.delta,
                                     delta_name=self.delta_name
@@ -207,12 +210,14 @@ class DeliveryPlanner:
             path, with_box, current_location, self.current_grid = find_path(
                 grid=self.current_grid,
                 start=current_location,
-                goal=self.start_location,
+                goal=self.delivery_location,
                 policy=policy,
                 delta=self.delta,
                 delta_name=self.delta_name,
                 box_number=box,
-                with_box=with_box
+                with_box=with_box,
+                deliver_location=self.delivery_location,
+                purpose='down'
             )
 
             self.output_path += path
@@ -225,7 +230,7 @@ class DeliveryPlanner:
 
             print self.output_path, with_box, current_location
 
-        moves = []
+        moves = self.output_path
         return moves
 
 
@@ -267,7 +272,7 @@ def optimum_policy(grid, goal, cost, delta, delta_name):
 
 
 def find_path(grid, start, goal, policy, delta, delta_name, box_number,
-              with_box):
+              with_box, deliver_location, purpose):
     x = start[0]
     y = start[1]
     move_ls = []
@@ -275,24 +280,42 @@ def find_path(grid, start, goal, policy, delta, delta_name, box_number,
     while goon:
         goon = False
         symbol = policy[x][y]
-        index = delta_name.index(symbol)
-        x2 = x + delta[index][0]
-        y2 = y + delta[index][1]
-        if (x2 == goal[0] and y2 == goal[1]):
-            if not with_box:
-                move_ls.append('lift {0}'.format(box_number))
-                with_box = True
-                grid[x2][y2] = 0
-            else:
-                move_ls.append('down {0} {1}'.format(x2, y2))
-                with_box = False
+        # if have a box, see whether can drop it.
+        if with_box:
+            for index in range(len(delta)):
+                x2 = x + delta[index][0]
+                y2 = y + delta[index][1]
+                if x2 == deliver_location[0] and y2 == deliver_location[1]:
+                    move_ls.append('down {0} {1}'.format(x2, y2))
+                    with_box = False
 
+        if symbol == '*':
             current_location = [x, y]
         else:
-            x = x2
-            y = y2
-            goon = True
-            move_ls.append('move {0} {1}'.format(x, y))
+            index = delta_name.index(symbol)
+            x2 = x + delta[index][0]
+            y2 = y + delta[index][1]
+
+            if (x2 == goal[0] and y2 == goal[1]):
+                if not with_box and purpose=='lift':
+                    move_ls.append('lift {0}'.format(box_number))
+                    with_box = True
+                    grid[x2][y2] = 0
+                elif with_box and purpose=='down':
+                    move_ls.append('down {0} {1}'.format(x2, y2))
+                    with_box = False
+                # else:
+                #     # TODO: what if the purpose is lift, but have a box in hand?
+                #     continue
+
+                    # current_location = [x, y]
+            else:
+                x = x2
+                y = y2
+                goon = True
+                move_ls.append('move {0} {1}'.format(x, y))
+
+            current_location = [x, y]
     return move_ls, with_box, current_location, grid
 
 
@@ -302,6 +325,10 @@ def find_path(grid, start, goal, policy, delta, delta_name, box_number,
 warehouse = ['1#2',
              '.#.',
              '..@']
+warehouse = ['..1.',
+             '..@.',
+             '....',
+             '2...']
 todo = ['1', '2']
 
 plan = DeliveryPlanner(warehouse=warehouse, todo=todo)

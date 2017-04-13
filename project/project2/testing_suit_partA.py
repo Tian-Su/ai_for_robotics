@@ -121,6 +121,7 @@ def execute_student_plan(warehouse, todo):
 
         # check if new box has been delivered
         delivered = state.get_boxes_delivered()
+        print 'delivered ', delivered
         if len(delivered) > num_delivered:
             last_box_delivered = delivered[-1]
             if last_box_delivered == next_box_to_deliver:
