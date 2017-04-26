@@ -62,8 +62,9 @@ def stochastic_value(grid, goal, cost_step, collision_cost, success_prob):
                     for move in range(len(delta)):
                         cost = 0.
                         for error in [-1, 0, 1]:
-                            x2 = x + delta[(move + error) % 4][0]
-                            y2 = y + delta[(move + error) % 4][1]
+                            real_move = (move + error) % 4
+                            x2 = x + delta[real_move][0]
+                            y2 = y + delta[real_move][1]
 
                             # probability of error direction
                             if error == 0:
@@ -80,6 +81,7 @@ def stochastic_value(grid, goal, cost_step, collision_cost, success_prob):
                             else:
                                 cost += collision_cost * prob
                         cost += cost_step
+
                         if cost < value[x][y]:
                             change = True
                             value[x][y] = cost

@@ -90,6 +90,9 @@ def estimate_next_pos(measurement, OTHER=None):
         OTHER['counter'] += 1
         # update length
         # average based on counter
+        # new_length = distance_between(OTHER['msmt'][-2], OTHER['msmt'][-1])
+        # OTHER['length'] = ((OTHER['counter'] - 1) * OTHER[
+        #     'length'] + new_length) / OTHER['counter']
         new_length = distance_between(OTHER['msmt'][-2], OTHER['msmt'][-1])
         OTHER['length'] = ((OTHER['counter'] - 1) * OTHER[
             'length'] + new_length) / OTHER['counter']
@@ -99,9 +102,13 @@ def estimate_next_pos(measurement, OTHER=None):
         angle = angle_between(v1, v2)
         if determinant(v1, v2) < 0:
             angle = -angle
+        # if OTHER['angle']:
+        #     OTHER['angle'] = ((OTHER['counter'] - 1) * OTHER['angle'] + angle) / \
+        #                      OTHER['counter']
+        # else:
+        #     OTHER['angle'] = angle
         if OTHER['angle']:
-            OTHER['angle'] = ((OTHER['counter'] - 1) * OTHER['angle'] + angle) / \
-                             OTHER['counter']
+            OTHER['angle'] = ((OTHER['counter'] - 1) * OTHER['angle'] + angle) / OTHER['counter']
         else:
             OTHER['angle'] = angle
         # v3 = np.dot(np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]), np.array(v2))
@@ -122,7 +129,7 @@ def estimate_next_pos(measurement, OTHER=None):
             for i in range(PF_N):
                 x = PF_robot(measurement)
                 # TODO: can change the noise
-                x.set_noise(OTHER['length'] / 50, OTHER['angle'] / 50,
+                x.set_noise(OTHER['length'] / 20, OTHER['angle'] / 20,
                             OTHER['length'])
                 p.append(x)
             OTHER['PF'] = p
@@ -134,12 +141,9 @@ def estimate_next_pos(measurement, OTHER=None):
         # print len(OTHER['msmt'])
         # print measurement
 
-        for i in range(PF_N):
-            OTHER['PF'][i].move(OTHER['angle'], OTHER['length'])
-
         w = []
         for i in range(PF_N):
-            w.append(OTHER['PF'][i].measurement_prob(sense_loc(measurement)))
+            w.append(OTHER['PF'][i].measurement_prob(measurement))
 
         OTHER['PF'] = \
             np.random.choice(OTHER['PF'], size=(1, 1, PF_N), replace=True,
@@ -147,7 +151,7 @@ def estimate_next_pos(measurement, OTHER=None):
         print 'np.sum(w)'
         print np.sum(w)
 
-        OTHER['msmt'].append(get_position(OTHER['PF']))
+        OTHER['msmt'].append(measurement)
         print "measurement"
         print measurement
         print 'get_position'
@@ -168,14 +172,20 @@ def estimate_next_pos(measurement, OTHER=None):
         else:
             OTHER['angle'] = angle
         # v3 = np.dot(np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]]), np.array(v2))
-        x = OTHER['msmt'][-1][0]
-        y = OTHER['msmt'][-1][1]
+        # x = OTHER['msmt'][-1][0]
+        # y = OTHER['msmt'][-1][1]
+        x = get_position(OTHER['PF'])[0]
+        y = get_position(OTHER['PF'])[1]
         heading = math.atan2(v2[1], v2[0])  # math.atan2(y, x)
         test_target = robot(x, y, heading)
         test_target.set_noise(0.0, 0.0, 0.0)
         test_target.move(OTHER['angle'], OTHER['length'])
         # xy_estimate = (test_target.x, test_target.y)
         xy_estimate = [(test_target.x, test_target.y)]
+
+        for i in range(PF_N):
+            OTHER['PF'][i].move(angle, new_length)
+
         test_target.move(OTHER['angle'], OTHER['length'])
         xy_estimate.append((test_target.x, test_target.y))
         test_target.move(OTHER['angle'], OTHER['length'])
@@ -303,7 +313,7 @@ def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER=None):
     broken_robot.color('green')
     broken_robot.resizemode('user')
     broken_robot.shapesize(0.3, 0.3, 0.3)
-    size_multiplier = 15.0  # change size of animation
+    size_multiplier = 10.0  # change size of animation
     chaser_robot.hideturtle()
     chaser_robot.penup()
     chaser_robot.goto(hunter_bot.x * size_multiplier,
@@ -324,7 +334,7 @@ def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER=None):
     chaser_robot.pendown()
     # End of Visualization
     # We will use your next_move_fcn until we catch the target or time expires.
-    while not caught and ctr < 200:
+    while not caught and ctr < 100:
         # Check to see if the hunter has caught the target.
         hunter_position = (hunter_bot.x, hunter_bot.y)
         target_position = (target_bot.x, target_bot.y)
@@ -371,8 +381,8 @@ def demo_grading_graph(hunter_bot, target_bot, next_move_fcn, OTHER=None):
 
 class PF_robot:
     def __init__(self, loc):
-        self.x = loc[0] + random.uniform(-20, 20)/10.
-        self.y = loc[1] + random.uniform(-20, 20)/10.
+        self.x = loc[0] + random.uniform(-20, 20) / 100.
+        self.y = loc[1] + random.uniform(-20, 20) / 100.
         self.orientation = random.uniform((10 * pi) / 180, (50 * pi) / 180)
         self.forward_noise = 0.0;
         self.turn_noise = 0.0;
@@ -417,21 +427,26 @@ class PF_robot:
         self.y += distance * sin(self.orientation)
 
     def Gaussian(self, mu, sigma, x):
-
         # calculates the probability of x for 1-dim Gaussian with mean mu and var. sigma
         return exp(- ((mu - x) ** 2) / (sigma ** 2) / 2.0) / sqrt(
             2.0 * pi * (sigma ** 2))
 
-    def measurement_prob(self, measurement):
-
+    def measurement_prob(self, measurement):  # measurement
+        mse = self.mse([self.x, self.y], measurement)
         # calculates how likely a measurement should be
-
-        prob = 1.0;
-        for i in range(len(landmarks)):
-            dist = sqrt((self.x - landmarks[i][0]) ** 2 + (
-                self.y - landmarks[i][1]) ** 2)
-            prob *= self.Gaussian(dist, self.sense_noise, measurement[i])
+        #
+        # prob = 1.0;
+        # for i in range(len(landmarks)):
+        #     dist = sqrt((self.x - landmarks[i][0]) ** 2 + (
+        #         self.y - landmarks[i][1]) ** 2)
+        #     prob *= self.Gaussian(dist, self.sense_noise, measurement[i])
+        prob = np.exp(-np.array(mse/10000) / (2 * self.sense_noise ** 2))
         return prob
+
+    def mse(self, point1, point2):
+        a = np.array(point1)
+        b = np.array(point2)
+        return np.sum((a - b) ** 2)
 
     def __repr__(self):
         return '[x=%.6s y=%.6s orient=%.6s]' % (

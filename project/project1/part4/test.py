@@ -17,7 +17,7 @@ failed_ctr = 0
 steps_list = []
 time_step = []
 N = 1000
-graph = False
+graph = True
 for trial in range(N):
     xt = random.uniform(-20,20)
     yt = random.uniform(-20,20)

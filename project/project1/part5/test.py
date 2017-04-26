@@ -17,7 +17,7 @@ failed_ctr = 0
 steps_list = []
 time_step = []
 N = 1000
-graph = False
+graph = True
 for trial in range(N):
     xt = random.uniform(-20,20)
     yt = random.uniform(-20,20)
@@ -33,7 +33,7 @@ for trial in range(N):
     #def __init__(self, x = 0.0, y = 0.0, heading = 0.0, turning = 2*pi/10, distance = 1.0):
     #target = robot(0.0, 10.0, 0.0, 2*pi / 30, 1.5)
     target = robot(xt,yt,orit,turn,dist)
-    measurement_noise = .05*target.distance
+    measurement_noise = 2*target.distance
     target.set_noise(0.0, 0.0, measurement_noise)
     #hunter = robot(-10.0, -10.0, 0.0)
     hunter = robot(xh,yh,orih)
